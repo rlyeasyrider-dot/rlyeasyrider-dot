@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Шаблон фишингового письма с разбором</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #f0f2f5;
+    color: #1a1a2e;
+    line-height: 1.6;
+    padding: 20px;
+  }
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  /* === Шапка страницы === */
+  .page-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2d5a8a 100%);
+    color: #fff;
+    padding: 28px 36px;
+    border-radius: 12px 12px 0 0;
+  }
+  .page-header h1 { font-size: 24px; margin-bottom: 6px; }
+  .page-header p { font-size: 14px; opacity: 0.9; }
+
+  .card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    overflow: hidden;
+    margin-bottom: 24px;
+  }
+  .card:first-of-type { border-radius: 0 0 12px 12px; }
+
+  .section-label {
+    display: inline-block;
+    padding: 4px 14px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 14px;
+  }
+  .label-email { background: #eef4fb; color: #1e3a5f; }
+  .label-breakdown { background: #fff8e6; color: #7a4a00; }
+  .label-ethics { background: #f0f9f0; color: #1b5e20; }
+
+  .content { padding: 28px 36px; }
+
+  /* === Блок письма === */
+  .email-window {
+    border: 1px solid #dde3ea;
+    border-radius: 10px;
+    overflow: hidden;
+    margin-top: 8px;
+  }
+  .email-window-header {
+    background: #eef2f7;
+    padding: 12px 20px;
+    border-bottom: 1px solid #dde3ea;
+    font-size: 13px;
+  }
+  .email-window-header .row {
+    display: flex;
+    margin-bottom: 4px;
+  }
+  .email-window-header .row:last-child { margin-bottom: 0; }
+  .email-window-header .label {
+    width: 90px;
+    color: #6b7a8d;
+    flex-shrink: 0;
+  }
+  .email-window-header .value {
+    color: #1a1a2e;
+    font-weight: 500;
+    word-break: break-all;
+  }
+  .email-window-header .value.suspicious {
+    color: #c62828;
+    font-weight: 600;
+    background: #fdecea;
+    padding: 0 6px;
+    border-radius: 4px;
+  }
+  .email-subject {
+    padding: 18px 20px 10px;
+    font-weight: 700;
+    font-size: 17px;
+    color: #1e3a5f;
+  }
+  .email-body {
+    padding: 0 20px 20px;
+    font-size: 14px;
+    color: #333;
+    white-space: pre-line;
+  }
+  .email-body .cta {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 10px 22px;
+    background: #2d5a8a;
+    color: #fff;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 14px;
+    text-decoration: none;
+  }
+  .email-body .signature {
+    margin-top: 18px;
+    color: #555;
+    font-size: 13px;
+    border-top: 1px solid #eee;
+    padding-top: 12px;
+  }
+
+  /* === Разбор === */
+  .breakdown-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-top: 8px;
+  }
+  .breakdown-item {
+    background: #fafbfc;
+    border: 1px solid #e0e7ef;
+    border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .breakdown-item h3 {
+    font-size: 14px;
+    color: #1e3a5f;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .breakdown-item p {
+    font-size: 13px;
+    color: #444;
+  }
+  .breakdown-item ul {
+    list-style: none;
+    font-size: 13px;
+  }
+  .breakdown-item ul li {
+    position: relative;
+    padding-left: 20px;
+    margin-bottom: 6px;
+    color: #444;
+  }
+  .breakdown-item ul li::before {
+    content: "•";
+    position: absolute;
+    left: 4px;
+    color: #2d5a8a;
+    font-weight: 700;
+  }
+  .hook-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    background: #fdecea;
+    color: #b71c1c;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 700;
+    margin: 2px 2px 0 0;
+  }
+
+  /* === Этический блок === */
+  .ethics-box {
+    background: #f0f9f0;
+    border-left: 4px solid #2e7d32;
+    border-radius: 0 8px 8px 0;
+    padding: 16px 20px;
+    font-size: 14px;
+    color: #1b5e20;
+    margin-top: 8px;
+  }
+
+  /* === Обучающий модуль === */
+  .learning-flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    margin-top: 12px;
+    flex-wrap: wrap;
+  }
+  .flow-step {
+    flex: 1;
+    min-width: 140px;
+    background: #eef4fb;
+    border-radius: 8px;
+    padding: 14px 16px;
+    font-size: 13px;
+    text-align: center;
+    position: relative;
+  }
+  .flow-step .num {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    background: #2d5a8a;
+    color: #fff;
+    border-radius: 50%;
+    line-height: 24px;
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 6px;
+  }
+  .flow-step strong { display: block; color: #1e3a5f; margin-bottom: 4px; }
+  .flow-arrow {
+    display: flex;
+    align-items: center;
+    padding: 0 6px;
+    color: #2d5a8a;
+    font-size: 20px;
+    font-weight: 700;
+  }
+
+  .footer {
+    background: #1e3a5f;
+    color: #fff;
+    text-align: center;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 13px;
+    opacity: 0.95;
+    margin-top: 8px;
+  }
+
+  @media (max-width: 640px) {
+    .content { padding: 20px; }
+    .breakdown-grid { grid-template-columns: 1fr; }
+    .flow-step { min-width: 100%; }
+    .flow-arrow { display: none; }
+    .email-window-header .row { flex-direction: column; }
+    .email-window-header .label { width: auto; font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="page-header">
+    <h1>🎣 Шаблон фишингового письма с разбором</h1>
+    <p>Учебный материал по Security Awareness: как выглядит имитация, какие приёмы использованы и как это работает в обучении</p>
+  </div>
+
+  <!-- === БЛОК 1: САМО ПИСЬМО === -->
+  <div class="card">
+    <div class="content">
+      <span class="section-label label-email">📧 Как выглядит письмо</span>
+      <p style="font-size:14px;color:#555;margin-bottom:4px;">
+        Легенда: письмо «от имени руководства» с просьбой срочно подтвердить доступ. Именно такой сценарий чаще всего используется в реальных атаках на крупные компании.
+      </p>
+
+      <div class="email-window">
+        <div class="email-window-header">
+          <div class="row">
+            <span class="label">От:</span>
+            <span class="value suspicious">direktor@gazprom-upravlenie.ru</span>
+          </div>
+          <div class="row">
+            <span class="label">Кому:</span>
+            <span class="value">sotrudnik@company.ru</span>
+          </div>
+          <div class="row">
+            <span class="label">Тема:</span>
+            <span class="value">СРОЧНО: подтвердите корпоративный доступ</span>
+          </div>
+        </div>
+        <div class="email-subject">СРОЧНО: подтвердите корпоративный доступ</div>
+        <div class="email-body">
+Добрый день!
+
+В связи с плановым обновлением системы безопасности все сотрудники должны подтвердить свои учётные данные в течение 2 часов. В противном случае доступ к корпоративной почте и внутренним ресурсам будет заблокирован.
+
+Пожалуйста, перейдите по ссылке ниже и введите свой логин и пароль:
+
+          <div><span class="cta">Подтвердить доступ</span></div>
+
+Если вы не подтвердите данные в течение 2 часов, ваш аккаунт будет автоматически заблокирован, а восстановление доступа займёт до 5 рабочих дней.
+
+          <div class="signature">
+С уважением,<br>
+Служба информационной безопасности<br>
+ПАО «Газпром»
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- === БЛОК 2: РАЗБОР === -->
+  <div class="card">
+    <div class="content">
+      <span class="section-label label-breakdown">🔍 Разбор: что здесь не так</span>
+
+      <div class="breakdown-grid">
+        <div class="breakdown-item">
+          <h3>🎭 Какая угроза имитируется</h3>
+          <p><strong>Фейковое обновление безопасности.</strong> Злоумышленники выдают себя за службу ИБ и требуют «подтвердить учётные данные» под предлогом планового обновления. В реальных атаках на Газпром использовалась именно эта легенда — сотрудникам писали «от имени руководства» с требованием срочных действий.</p>
+        </div>
+
+        <div class="breakdown-item">
+          <h3>🪝 Использованные «крючки»</h3>
+          <ul>
+            <li><strong>Срочность:</strong> «в течение 2 часов» — не даёт времени подумать.</li>
+            <li><strong>Страх:</strong> «доступ будет заблокирован», «восстановление займёт до 5 дней».</li>
+            <li><strong>Авторитет:</strong> подпись «Служба информационной безопасности ПАО Газпром».</li>
+            <li><strong>Запрос конфиденциальных данных:</strong> логин и пароль.</li>
+          </ul>
+        </div>
+
+        <div class="breakdown-item">
+          <h3>⚠️ Что должно насторожить</h3>
+          <ul>
+            <li><strong>Домен отправителя:</strong> <em>gazprom-upravlenie.ru</em> — не официальный <em>gazprom.ru</em>. Добавлено слово, чтобы выглядело правдоподобно.</li>
+            <li><strong>Запрос пароля в письме:</strong> легитимные службы ИБ никогда не просят пароль по почте.</li>
+            <li><strong>Ссылка ведёт не на внутренний портал,</strong> а на сторонний домен (в шаблоне кнопка — заглушка).</li>
+            <li><strong>Общее приветствие:</strong> «Добрый день!» без имени и фамилии.</li>
+          </ul>
+        </div>
+
+        <div class="breakdown-item">
+          <h3>🎯 Что должно произойти после клика</h3>
+          <p>В реальной имитации кнопка ведёт на лендинг, который <strong>фиксирует клик</strong> (кто, когда, какой шаблон) и сразу показывает обучающее сообщение: «Это было учебное письмо. Вы кликнули по ссылке — так действуют мошенники. Никогда не вводите пароль по ссылке из письма». Сотрудник попадает в список на дополнительное обучение.</p>
+        </div>
+      </div>
+
+      <div style="margin-top:18px;">
+        <h3 style="font-size:14px;color:#1e3a5f;margin-bottom:10px;">🏷️ Теги приёмов социальной инженерии</h3>
+        <span class="hook-tag">Срочность</span>
+        <span class="hook-tag">Страх потери доступа</span>
+        <span class="hook-tag">Авторитет (служба ИБ)</span>
+        <span class="hook-tag">Поддельный домен</span>
+        <span class="hook-tag">Запрос учётных данных</span>
+        <span class="hook-tag">Общее приветствие</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- === БЛОК 3: ЭТИКА === -->
+  <div class="card">
+    <div class="content">
+      <span class="section-label label-ethics">⚖️ Этическая рамка</span>
+      <div class="ethics-box">
+        <strong>Важно:</strong> это учебный шаблон, а не реальная атака. В корпоративной среде имитационные письма запускаются только после согласования с руководителем и службой безопасности. Пароли сотрудников <strong>не сохраняются</strong> — фиксируется только факт клика и факт ввода, чтобы направить человека на обучение. Цель — не наказать, а научить распознавать угрозу.
+      </div>
+    </div>
+  </div>
+
+  <!-- === БЛОК 4: ОБУЧАЮЩИЙ МОДУЛЬ === -->
+  <div class="card">
+    <div class="content">
+      <span class="section-label label-breakdown">📚 Как это превращается в обучающий модуль</span>
+      <p style="font-size:14px;color:#555;margin-bottom:4px;">
+        Одно и то же письмо работает в двух режимах: как имитация (проверка бдительности) и как обучающий материал (разбор ошибок).
+      </p>
+
+      <div class="learning-flow">
+        <div class="flow-step">
+          <span class="num">1</span>
+          <strong>Имитация</strong>
+          Сотрудник получает письмо и либо кликает, либо жалуется в СБ.
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <span class="num">2</span>
+          <strong>Фиксация</strong>
+          Лендинг фиксирует клик, статистика — report rate.
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <span class="num">3</span>
+          <strong>Обучение</strong>
+          Кликнувший видит разбор: какие признаки он пропустил.
+        </div>
+        <div class="flow-arrow">→</div>
+        <div class="flow-step">
+          <span class="num">4</span>
+          <strong>Аналитика</strong>
+          Срез по отделам: где проседает — туда точечное обучение.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    Учебный материал по безопасности · Security Awareness
+  </div>
+</div>
+</body>
+</html>
